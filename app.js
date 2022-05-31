@@ -12,7 +12,6 @@ app.get("/", (req, res) => res.type('html').send(html));
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
-let refreshToken;
 let accessToken = process.env.ACCESS_TOKEN;
 
 const exchangeCode = async (code) => {
@@ -26,14 +25,49 @@ const exchangeCode = async (code) => {
   const response = await fetch('https://api.monzo.com/oauth2/token', { method: 'post', body: params });
 
   const data = await response.json();
-  refreshToken = data.refresh_token;
   accessToken = data.access_token;
   console.log('oauth data', data);
-
+  await setRefreshToken(data.refresh_token)
 }
 
+const getRefreshToken = async () => {
+
+  const response = await fetch('https://api.jsonbin.io/v3/b/62966133449a1f3821f825ef/latest',
+    {
+      headers:
+      {
+        "X-Master-Key": process.env.JSON_BIN_MASTER_KEY, 
+        "X-Access-Key": process.env.JSON_BIN_ACCESS_KEY
+      }
+    }
+  );
+  const data = await response.json();
+  console.log('response', data);
+  return data.record.refresh_token;
+};
+
+const setRefreshToken = async (refresh_token) => {
+  const response = await fetch('https://api.jsonbin.io/v3/b/62966133449a1f3821f825ef',
+    {
+      method: 'put',
+      headers:
+      {
+        "X-Master-Key": process.env.JSON_BIN_MASTER_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        refresh_token
+      })
+    }
+  );
+  const data = await response.json();
+  console.log('response', data);
+  return data.record.refresh_token;
+};
 
 const refreshTheToken = async () => {
+  const refreshToken = await getRefreshToken();
+  console.log('Refreshing the Token', refreshToken)
   const params = new URLSearchParams();
   params.append('grant_type', 'refresh_token');
   params.append('client_id', process.env.CLIENT_ID);
@@ -42,8 +76,8 @@ const refreshTheToken = async () => {
   const response = await fetch('https://api.monzo.com/oauth2/token', { method: 'post', body: params });
 
   const data = await response.json();
-  refreshToken = data.refresh_token;
   accessToken = data.access_token;
+  await setRefreshToken(data.refresh_token)
   console.log('oauth data refreshed', data);
 }
 
@@ -74,6 +108,7 @@ const sendMessage = async (message) => {
   // "params[body_color]=#FCF1EE" \
   // "params[title_color]=#333333" \
   // "params[body]=Some body text to display"
+  await refreshTheToken();
   console.log('sending a message');
   const params = new URLSearchParams();
   console.log('Access Token: ', accessToken);
@@ -95,6 +130,7 @@ app.get("/send-message", (req, res) => {
 });
 
 const pots = async (opts = {}) => {
+  await refreshTheToken();
   const params = new URLSearchParams();
   let response;
   if (opts.amount && opts.potId) {
@@ -124,7 +160,7 @@ app.get("/pots", (req, res) => {
 
 const parseTransaction = async (reqBody) => {
   if (reqBody?.data?.category === 'eating_out') {
-    await pots({potId: 'pot_0000A5wRB36ZgRNvDIIgi3', amount: Math.abs(reqBody.data.amount)})
+    await pots({ potId: 'pot_0000A5wRB36ZgRNvDIIgi3', amount: Math.abs(reqBody.data.amount) })
   }
 }
 
@@ -182,7 +218,7 @@ const html = `
   </head>
   <body>
     <section>
-      Hello from Render!
+      Monzo API Test
     </section>
   </body>
 </html>
