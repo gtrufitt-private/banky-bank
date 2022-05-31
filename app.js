@@ -14,6 +14,11 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
 let accessToken = process.env.ACCESS_TOKEN;
 
+const catPotMap = {
+  "groceries": "pot_0000AJkWVwi5TF9qQM7fnN",
+  "eating_out": "pot_0000A5wRB36ZgRNvDIIgi3"
+}
+
 const exchangeCode = async (code) => {
   console.log('Got auth code: ', code)
   const params = new URLSearchParams();
@@ -159,8 +164,8 @@ app.get("/pots", (req, res) => {
 });
 
 const parseTransaction = async (reqBody) => {
-  if (reqBody?.data?.category === 'eating_out') {
-    await pots({ potId: 'pot_0000A5wRB36ZgRNvDIIgi3', amount: Math.abs(reqBody.data.amount) })
+  if (catPotMap[reqBody?.data?.category]) {
+    await pots({ potId: catPotMap[reqBody?.data?.category], amount: Math.abs(reqBody.data.amount) })
   }
 }
 
