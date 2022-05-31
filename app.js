@@ -124,7 +124,7 @@ app.get("/pots", (req, res) => {
 
 const parseTransaction = async (reqBody) => {
   if (reqBody?.data?.category === 'eating_out') {
-    await pots({potId: 'pot_0000ACEAJukuAlNxQRONBB', amount: Math.abs(reqBody.data.amount)})
+    await pots({potId: 'pot_0000A5wRB36ZgRNvDIIgi3', amount: Math.abs(reqBody.data.amount)})
   }
 }
 
