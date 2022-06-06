@@ -16,7 +16,10 @@ let accessToken = process.env.ACCESS_TOKEN;
 
 const catPotMap = {
   "groceries": "pot_0000AJkWVwi5TF9qQM7fnN",
-  "eating_out": "pot_0000A5wRB36ZgRNvDIIgi3"
+  "eating_out": "pot_0000A5wRB36ZgRNvDIIgi3",
+  "transport": "pot_00009metzAzd3Dwp938E0v",
+  "entertainment": "pot_00009metsoPA7XLSswZIMT",
+  "bills": "pot_00009metsoPA7XLSswZIMT"
 }
 
 const exchangeCode = async (code) => {
@@ -164,7 +167,7 @@ app.get("/pots", (req, res) => {
 });
 
 const parseTransaction = async (reqBody) => {
-  if (catPotMap[reqBody?.data?.category]) {
+  if (catPotMap[reqBody?.data?.category] && reqBody?.type === 'transaction.created') {
     await pots({ potId: catPotMap[reqBody?.data?.category], amount: Math.abs(reqBody.data.amount) })
   }
 }
