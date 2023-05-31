@@ -203,10 +203,10 @@ const parseTransaction = async (reqBody) => {
 
 app.post("/transaction-created", (req, res) => {
   const fireOff = async () => {
-    const {category, amount, created, description, dedupe_id, type} = req.body.data;
+    const {category, amount, created, description, dedupe_id} = req.body.data;
     console.log('------------------------')
     console.log('Description: ', description);
-    console.log('Type: ', type);
+    console.log('Type: ', req.body.type);
     console.log('Category: ', category);
     console.log('Amount: ', amount);
     console.log('Created: ', created);
