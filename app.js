@@ -201,7 +201,15 @@ const parseTransaction = async (reqBody) => {
 
 app.post("/transaction-created", (req, res) => {
   const fireOff = async () => {
-    console.log('Got body:', req.body);
+    const {category, amount, created, description, dedupe_id} = req.body.data;
+    console.log('------------------------')
+    console.log('Category: ', category);
+    console.log('Amount: ', amount);
+    console.log('Created: ', created);
+    console.log('Description: ', description);
+    console.log('Dedupe ID: ', dedupe_id);
+    console.log('bacs_record_id: ', req.body.data.metadata['bacs_record_id']);
+    console.log('------------------------')
     await parseTransaction(req.body);
     bacsIds.push(req.body.data.metadata['bacs_record_id']);
     res.send('DONE');
