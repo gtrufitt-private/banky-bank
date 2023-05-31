@@ -2,6 +2,7 @@ const fetch = require("node-fetch");
 const Monzo = require('monzo-js');
 const express = require("express");
 const app = express();
+const fs = require('fs');
 app.use(express.json());
 
 require('dotenv').config();
@@ -13,6 +14,7 @@ app.get("/", (req, res) => res.type('html').send(html));
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
 let accessToken = process.env.ACCESS_TOKEN;
+let bacsIds = [];
 
 const catPotMap = {
   "groceries": "pot_0000AJkWVwi5TF9qQM7fnN",
@@ -44,7 +46,7 @@ const getRefreshToken = async () => {
     {
       headers:
       {
-        "X-Master-Key": process.env.JSON_BIN_MASTER_KEY, 
+        "X-Master-Key": process.env.JSON_BIN_MASTER_KEY,
         "X-Access-Key": process.env.JSON_BIN_ACCESS_KEY
       }
     }
@@ -166,8 +168,33 @@ app.get("/pots", (req, res) => {
   fireOff();
 });
 
+app.get("/webhooks", (req, res) => {
+  (async () => {
+    await refreshTheToken();
+    const response = await fetch(`https://api.monzo.com/webhooks?account_id=${process.env.ACCOUNT_ID}`, { headers: { 'Authorization': "Bearer " + accessToken } });
+    const data = await response.json();
+    console.log('response', data);
+    res.send(`store:` + store++);
+  })()
+
+})
+
+app.get("/transactions", (req, res) => {
+  (async () => {
+    const response = await fetch(`https://api.monzo.com/transactions?account_id=${process.env.ACCOUNT_ID}`, { headers: { 'Authorization': "Bearer " + accessToken } });
+    const data = await response.json();
+    fs.writeFile('responses/transactions.json', JSON.stringify(data), function (err) { });
+    res.send('DONE');
+  })()
+
+})
+
 const parseTransaction = async (reqBody) => {
-  if (catPotMap[reqBody?.data?.category] && reqBody?.type === 'transaction.created') {
+  // Make sure we don't have an existing pot transfer that contains the bacs record id 
+  // in the dedupe_id field
+  const matcher = bacsId.filter((id) => reqBody?.data?.dedupe_id.match(id));
+
+  if (catPotMap[reqBody?.data?.category] && reqBody?.type === 'transaction.created' && matcher.length === 0) {
     await pots({ potId: catPotMap[reqBody?.data?.category], amount: Math.abs(reqBody.data.amount) })
   }
 }
@@ -175,7 +202,8 @@ const parseTransaction = async (reqBody) => {
 app.post("/transaction-created", (req, res) => {
   const fireOff = async () => {
     console.log('Got body:', req.body);
-    await parseTransaction(req.body)
+    await parseTransaction(req.body);
+    bacsIds.push(req.body.data.metadata['bacs_record_id']);
     res.send('DONE');
   }
   fireOff();
