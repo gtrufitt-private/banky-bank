@@ -143,8 +143,9 @@ const pots = async (opts = {}) => {
   await refreshTheToken();
   const params = new URLSearchParams();
   let response;
+  console.log('pots opts Amount: ', opts.amount);
+  console.log('pots opts PotId: ', opts.potId);
   if (opts.amount && opts.potId) {
-    console.log('Amount ', opts.amount);
     params.append('destination_account_id', process.env.ACCOUNT_ID);
     params.append('amount', opts.amount);
     params.append('dedupe_id', Math.random());
@@ -193,7 +194,8 @@ const parseTransaction = async (reqBody) => {
   // Make sure we don't have an existing pot transfer that contains the bacs record id 
   // in the dedupe_id field
   const matcher = bacsIds.filter((id) => reqBody?.data?.dedupe_id.match(id));
-
+  console.log('MATCHER LENGTH: ', matcher.length);
+  console.log('catPotMap: ', catPotMap[reqBody?.data?.category]);
   if (catPotMap[reqBody?.data?.category] && reqBody?.type === 'transaction.created' && matcher.length === 0) {
     await pots({ potId: catPotMap[reqBody?.data?.category], amount: Math.abs(reqBody.data.amount) })
   }
@@ -210,9 +212,9 @@ app.post("/transaction-created", (req, res) => {
     console.log('Created: ', created);
     console.log('Dedupe ID: ', dedupe_id);
     console.log('bacs_record_id: ', req.body.data.metadata['bacs_record_id']);
-    console.log('------------------------')
     await parseTransaction(req.body);
     bacsIds.push(req.body.data.metadata['bacs_record_id']);
+    console.log('------------------------')
     res.send('DONE');
   }
   fireOff();
