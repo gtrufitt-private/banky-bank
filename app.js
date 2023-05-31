@@ -183,7 +183,7 @@ app.get("/transactions", (req, res) => {
   (async () => {
     const response = await fetch(`https://api.monzo.com/transactions?account_id=${process.env.ACCOUNT_ID}`, { headers: { 'Authorization': "Bearer " + accessToken } });
     const data = await response.json();
-    fs.writeFile('responses/transactions.json', JSON.stringify(data), function (err) { });
+    console.log(data)
     res.send('DONE');
   })()
 
@@ -192,7 +192,7 @@ app.get("/transactions", (req, res) => {
 const parseTransaction = async (reqBody) => {
   // Make sure we don't have an existing pot transfer that contains the bacs record id 
   // in the dedupe_id field
-  const matcher = bacsId.filter((id) => reqBody?.data?.dedupe_id.match(id));
+  const matcher = bacsIds.filter((id) => reqBody?.data?.dedupe_id.match(id));
 
   if (catPotMap[reqBody?.data?.category] && reqBody?.type === 'transaction.created' && matcher.length === 0) {
     await pots({ potId: catPotMap[reqBody?.data?.category], amount: Math.abs(reqBody.data.amount) })
