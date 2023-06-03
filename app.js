@@ -193,7 +193,7 @@ app.get("/transactions", (req, res) => {
 const parseTransaction = async (reqBody) => {
   // Make sure we don't have an existing pot transfer that contains the bacs record id 
   // in the dedupe_id field
-  const matcher = bacsIds.filter((id) => id.match(reqBody?.data?.dedupe_id));
+  const matcher = bacsIds.filter((id) => id?.match(reqBody?.data?.dedupe_id));
   console.log('MATCHER LENGTH: ', matcher.length);
   console.log('catPotMap: ', catPotMap[reqBody?.data?.category]);
   if (catPotMap[reqBody?.data?.category] && reqBody?.type === 'transaction.created' && matcher.length === 0) {
