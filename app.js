@@ -53,7 +53,7 @@ const getRefreshToken = async () => {
   );
   const data = await response.json();
   console.log('response', data);
-  return data.record.refresh_token;
+  return data?.record?.refresh_token;
 };
 
 const setRefreshToken = async (refresh_token) => {
@@ -72,7 +72,7 @@ const setRefreshToken = async (refresh_token) => {
   );
   const data = await response.json();
   console.log('response', data);
-  return data.record.refresh_token;
+  return data?.record?.refresh_token;
 };
 
 const refreshTheToken = async () => {
